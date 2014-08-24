@@ -5,12 +5,14 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.*;
 import java.util.*;
 
 public class MainActivity extends Activity{
@@ -23,6 +25,7 @@ public class MainActivity extends Activity{
     private Map memory;
     private int index = 0;
     private List<Integer> answers;
+    private static final String FILE_NAME = "Code.txt";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +35,9 @@ public class MainActivity extends Activity{
         enterText = (EditText) findViewById(R.id.enterEditText);
         outText = (TextView) findViewById(R.id.outTextView);
         btnCompile = (Button) findViewById(R.id.btn_compile);
+
+        final String code = readFile(FILE_NAME);
+        enterText.setText(code);
 
         btnCompile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -46,6 +52,59 @@ public class MainActivity extends Activity{
             }
         });
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        final String code = enterText.getText().toString();
+        writeFile(FILE_NAME, code);
+        super.onBackPressed();
+    }
+
+    private String readFile(String fileName) {
+        String savedCode = "";
+
+        //ошибка intellij idea при поптыки использовать try-with-resources
+        //исправить
+        try {
+            InputStream inStream = openFileInput(fileName);
+            try {
+                InputStreamReader sr = new InputStreamReader(inStream);
+                BufferedReader reader = new BufferedReader(sr);
+                StringBuffer buffer = new StringBuffer();
+                String str = "";
+
+                while ((str = reader.readLine()) != null) {
+                    buffer.append(str);
+                }
+                savedCode = buffer.toString();
+
+                if(savedCode == null)
+                    return "";
+            } finally {
+                inStream.close();
+            }
+
+        } catch (IOException e) {
+            Log.e("FILE READ ERROR", e.toString());
+        }
+
+        return savedCode;
+    }
+
+    private void writeFile(String fileName, String inputCode){
+        //ошибка intellij idea при поптыки использовать try-with-resources
+        //исправить
+                try{
+                    OutputStreamWriter outStream = new OutputStreamWriter(openFileOutput(fileName, 0));
+                    try {
+                        outStream.write(inputCode);
+                    } finally {
+                        outStream.close();
+                    }
+                }catch (IOException e){
+                    Log.e("WRITE ERROR", e.toString());
+                }
     }
 
     private void process(){
